@@ -1,0 +1,28 @@
+{
+  "name": "typeracer",
+  "authors": [
+    "punsa <puneet.241994.agarwal@gmail.com>"
+  ],
+  "description": "Ver well Known game",
+  "main": "index.html",
+  "moduleType": [],
+  "keywords": [
+    "typeracer",
+    "reactjs",
+    "appbasejs"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "react": "~0.14.5",
+    "bootstrap": "~3.3.6",
+    "jquery": "~2.1.4"
+  }
+}
