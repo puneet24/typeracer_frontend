@@ -192,6 +192,8 @@ var PlayerBoard = React.createClass({
 				playerobj.setState({ pid : null });
 				playerobj.setState({ lettercount : 0 })
 			}
+			if(response._source.lstatus == "begin" && parseInt(response._source.countdown) == 2)
+				playerobj.setState({ quote : response._source.quote });
 			if(response._source.lstatus == "end" || playerobj.state.pid != null){
 				playerobj.setState({ btnstatus : "disabled" });
 			}
