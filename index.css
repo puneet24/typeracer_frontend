@@ -1,0 +1,10 @@
+.quote {
+	font-size: 30px;
+}
+
+.progressbar {
+	background-color: transparent;
+    border-bottom-style: dashed;
+    border-color: goldenrod;
+    margin-top: 6px;
+}

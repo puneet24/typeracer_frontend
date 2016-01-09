@@ -8,12 +8,6 @@ var appbase = new Appbase({
   password: 'e19f9e4a-7e75-4a9f-b95f-d94882ed135c'
 });
 
-var pid = 0;
-
-function handler(){
-	console.log("hello");
-}
-
 var LeaderStatus = React.createClass({
 	getInitialState : function() {
     	return {lstatus : null, countdown : null};
@@ -62,7 +56,15 @@ var User = React.createClass({
 		return {lettercount : null};
 	},
 	componentWillMount : function() {
-		this.setState({ lettercount : this.props.lettercount });
+		var userobj = this;
+		appbase.get({
+      		type: 'users',
+      		id: userobj.props.userid
+		}).on('data', function(response) {
+      		userobj.setState({ lettercount : response._source.lettercount });
+		}).on('error', function(error) {
+      		console.log("getStream() failed with: ", error)
+		});
 	},
 	componentDidMount : function() {
 		var userobj = this;
@@ -76,9 +78,28 @@ var User = React.createClass({
 		});
 	},
 	render : function() {
+		var userobj = this;
+		var tabstyle = {
+			position: 'relative',
+			left: Math.floor((userobj.state.lettercount *830)/userobj.props.quotelen),
+			top:0
+		}
+		var namestyle = {
+			'margin-top': '12px'
+		}
 		return (
 			<div className = "row">
-				<b>lettercount</b> : {this.state.lettercount}
+				<div style={namestyle} className="col-md-1"><b>{userobj.props.special}</b></div>
+				<div className="col-md-9 progressbar">
+					<table style={tabstyle}>
+						<tbody>
+							<tr>
+								<td><img src="mario.jpg" style={{height: '30px'}}></img></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div className="col-md-2"><b>lettercount</b> : {this.state.lettercount}</div>
 			</div>
 		);
 	}
@@ -99,6 +120,7 @@ var LeaderBoard = React.createClass({
 			}
 		}).on('data', function(res) {
 			console.log("query result: ", res);
+			console.log(res);
 		  	for(var i = 0;i < res.hits.total;i++){
 		  		var obj = {userid : res.hits.hits[i]._id, lettercount : res.hits.hits[i]._source.lettercount};
 		  		boardobj.setState({ userinfo : boardobj.state.userinfo.concat([obj]) });
@@ -144,13 +166,20 @@ var LeaderBoard = React.createClass({
 		});
 	},
 	render : function() {
+		var boardobj = this;
+		console.log(boardobj.props.pid);
 		return (
 			<div className="well">
 			{
 				this.state.userinfo.map(function(user){
-					return (
-						<User key={user.userid} lettercount={user.lettercount} userid={user.userid} />
-					)
+					if(user.userid == boardobj.props.pid)
+						return (
+							<User key={user.userid} quotelen={boardobj.props.quotelen} special={"you"} lettercount={user.lettercount} userid={user.userid} />
+						)
+					else
+						return (
+							<User key={user.userid} quotelen={boardobj.props.quotelen} special={"guest"} lettercount={user.lettercount} userid={user.userid} />
+						)
 				})
 			}
 			</div>
@@ -160,7 +189,7 @@ var LeaderBoard = React.createClass({
 
 var PlayerBoard = React.createClass({
 	getInitialState : function() {
-		return {pid : null,lettercount : 0,btnstatus : "disabled",quote : "",textstatus : "none"}
+		return {pid : null,lettercount : 0,btnstatus : "none",quote : "",textstatus : "none",a : "",b : "",c : ""}
 	},
 	componentWillMount : function() {
 		var playerobj = this;
@@ -170,10 +199,14 @@ var PlayerBoard = React.createClass({
 		}).on('data', function(response) {
 		    console.log(response);
 		    playerobj.setState({ quote : response._source.quote });
+		    console.log(playerobj.state.quote);
+		    playerobj.setState({ a : playerobj.state.quote.substring(0,parseInt(playerobj.state.lettercount)) });
+			playerobj.setState({ b : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount),parseInt(playerobj.state.lettercount)+1) });
+			playerobj.setState({ c : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount)+1) });
 		    if(response._source.lstatus == "end")
-		    	playerobj.setState({ btnstatus : "disabled" });
+		    	playerobj.setState({ btnstatus : "none" });
 		   	else
-		    	playerobj.setState({ btnstatus : "" });
+		    	playerobj.setState({ btnstatus : "block" });
 		}).on('error', function(error) {
 		    console.log(error);
 		});
@@ -191,41 +224,46 @@ var PlayerBoard = React.createClass({
 			if(response._source.lstatus == "end"){
 				playerobj.setState({ pid : null });
 				playerobj.setState({ lettercount : 0 })
+
 			}
-			if(response._source.lstatus == "begin" && parseInt(response._source.countdown) == 2)
+			if(response._source.lstatus == "begin" && parseInt(response._source.countdown) == 2){
 				playerobj.setState({ quote : response._source.quote });
+				playerobj.setState({ a : playerobj.state.quote.substring(0,parseInt(playerobj.state.lettercount)) });
+				playerobj.setState({ b : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount),parseInt(playerobj.state.lettercount)+1) });
+				playerobj.setState({ c : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount)+1) });
+			}
 			if(response._source.lstatus == "end" || playerobj.state.pid != null){
-				playerobj.setState({ btnstatus : "disabled" });
+				playerobj.setState({ btnstatus : "none" });
 			}
 			else
-				playerobj.setState({ btnstatus : "" });
+				playerobj.setState({ btnstatus : "block" });
 		}).on('error', function(err) {
 		  	console.log("search error: ", err);
 		});
+		$(document.body).on('keypress', playerobj.handleKeyDown);
 	},
-	onTyped : function() {
+	handleKeyDown : function(e) {
 		var playerobj = this;
-		console.log("hello");
-		var quotemsg = playerobj.state.quote.substring(parseInt(playerobj.state.lettercount));
-		var c = quotemsg.indexOf(" ");
-		if(c != -1)
-				quotemsg = quotemsg.substring(0,c+1);
-		console.log(quotemsg);
-		var data = document.getElementById("msg").value;
-		if(data == quotemsg){
-			document.getElementById("msg").value = "";
-			var lc = parseInt(parseInt(playerobj.state.lettercount) + parseInt(data.length));
-			playerobj.setState({ lettercount : lc })
-			appbase.index({
-	 		    type: 'users',
-	 		    id: playerobj.state.pid,
-	 		    body: {"lettercount" : lc}
-	 		}).on('data', function(response) {
-	     		console.log(response);
-	 		}).on('error', function(error) {
-	 		    console.log(error);
-	 		});
+		if(playerobj.state.textstatus == "block"){
+			console.log("hello");
+			if(e.keyCode == playerobj.state.quote[playerobj.state.lettercount].charCodeAt()){
+				playerobj.setState({ lettercount : parseInt(playerobj.state.lettercount) + 1 });
+				playerobj.setState({ a : playerobj.state.quote.substring(0,parseInt(playerobj.state.lettercount)) });
+				playerobj.setState({ b : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount),parseInt(playerobj.state.lettercount)+1) });
+				playerobj.setState({ c : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount)+1) });
+				appbase.index({
+		 		    type: 'users',
+		 		    id: playerobj.state.pid,
+		 		    body: {"lettercount" : playerobj.state.lettercount}
+		 		}).on('data', function(response) {
+		     		console.log(response);
+		 		}).on('error', function(error) {
+		 		    console.log(error);
+		 		});
+			}
 		}
+        console.log(e.keyCode);
+
 	},
 	onStart : function() {
 		var playerobj = this;
@@ -245,10 +283,17 @@ var PlayerBoard = React.createClass({
 		var styling = "display : "
 		return (
 			<div>
-				<LeaderBoard Key="board" />
-				<button className={"btn btn-primary " + this.state.btnstatus} onClick={this.onStart}>Start Game</button>
-				<div className="well" id="quote">{this.state.quote}</div>
-				<input type="text" className="form-control" id="msg" onChange={this.onTyped} style={{display : playerobj.state.textstatus}}></input>
+				<LeaderBoard Key="board" pid={playerobj.state.pid} quotelen={playerobj.state.quote.length} />
+				<div className="row">
+				<div className="col-md-3"></div>
+				<div className="col-md-2"></div>
+				<div className="col-md-2"><button className={"btn btn-primary "} style={{display : playerobj.state.btnstatus}} onClick={this.onStart}>Start Game</button></div>
+				</div><br/>
+				<div className="well quote">
+					<span style={{color:"red"}}>{playerobj.state.a}</span>
+					<span style={{color:"black"}}><u>{playerobj.state.b}</u></span>
+					<span style={{color:"black"}}>{playerobj.state.c}</span>
+				</div>
 			</div>
 		);
 	}
@@ -258,11 +303,6 @@ ReactDOM.render(
   <LeaderStatus />,
   document.getElementById('leader_status')
 );
-
-// ReactDOM.render(
-//   <LeaderBoard />,
-//   document.getElementById('leader_board')
-// );
 
 ReactDOM.render(
   <PlayerBoard />,
