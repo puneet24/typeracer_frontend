@@ -252,7 +252,7 @@ var PlayerBoard = React.createClass({
 	},
 	handleKeyDown : function(e) {
 		var playerobj = this;
-		if(playerobj.state.quotestatus == "block"){
+		if(playerobj.state.quotestatus == "block" && playerobj.state.pid != null){
 			if(e.keyCode == playerobj.state.quote[playerobj.state.lettercount].charCodeAt()){
 				playerobj.setState({ lettercount : parseInt(playerobj.state.lettercount) + 1 });
 				playerobj.setState({ a : playerobj.state.quote.substring(0,parseInt(playerobj.state.lettercount)) });
