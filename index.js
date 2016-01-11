@@ -189,7 +189,7 @@ var LeaderBoard = React.createClass({
 
 var PlayerBoard = React.createClass({
 	getInitialState : function() {
-		return {pid : null,lettercount : 0,btnstatus : "none",quote : "",quotestatus : "none",textstatus : "none",a : "",b : "",c : ""}
+		return {pid : null,lettercount : 0,margin : null,btnstatus : "none",quote : "",quotestatus : "none",textstatus : "none",a : "",b : "",c : ""}
 	},
 	componentWillMount : function() {
 		var playerobj = this;
@@ -214,6 +214,8 @@ var PlayerBoard = React.createClass({
 		}).on('error', function(error) {
 		    console.log(error);
 		});
+		var winWidth = $(document).width()-140;
+  		playerobj.setState({ margin : (winWidth/2)});
 	},
 	componentDidMount : function() {
 		var playerobj = this;
@@ -258,6 +260,7 @@ var PlayerBoard = React.createClass({
 				playerobj.setState({ a : playerobj.state.quote.substring(0,parseInt(playerobj.state.lettercount)) });
 				playerobj.setState({ b : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount),parseInt(playerobj.state.lettercount)+1) });
 				playerobj.setState({ c : playerobj.state.quote.substring(parseInt(playerobj.state.lettercount)+1) });
+				playerobj.setState({ margin : playerobj.state.margin - 29 });
 				if(playerobj.state.lettercount == playerobj.state.quote.length){
 					appbase.index({
 			 		    type: 'users',
@@ -300,7 +303,15 @@ var PlayerBoard = React.createClass({
 	},
 	render : function() {
 		var playerobj = this;
-		var styling = "display : "
+		var styling = "display : ";
+		var indents = [],indents2 = [],indents3 = [];
+		for(var i=0;i<playerobj.state.lettercount;i++){
+			indents.push(playerobj.state.quote[i]);
+		}
+		indents2.push(playerobj.state.quote[playerobj.state.lettercount]);
+		for(var i=playerobj.state.lettercount+1;i<playerobj.state.quote.length;i++){
+			indents3.push(playerobj.state.quote[i]);
+		}
 		return (
 			<div>
 				<LeaderBoard Key="board" pid={playerobj.state.pid} quotelen={playerobj.state.quote.length} />
@@ -309,12 +320,32 @@ var PlayerBoard = React.createClass({
 				<div className="col-md-2"></div>
 				<div className="col-md-2"><button className={"btn btn-primary "} style={{display : playerobj.state.btnstatus}} onClick={this.onStart}>Start Game</button></div>
 				</div><br/>
-				<div className="well quote" style={{display : playerobj.state.quotestatus}}>
-					<span style={{color:"red"}}>{playerobj.state.a}</span>
-					<span style={{color:"black"}}><u>{playerobj.state.b}</u></span>
-					<span style={{color:"black"}}>{playerobj.state.c}</span>
+				<div className={"content"} style={{"margin-left" : playerobj.state.margin,display : playerobj.state.quotestatus}}>
+					{
+						indents.map(function(ct){
+							return (
+								<span className="char done">{ct}</span>
+							)
+						})
+						
+					}
+					{
+						indents2.map(function(ct){
+							return (
+								<span className="char focused">{ct}</span>
+							)
+						})
+					}
+					{
+						indents3.map(function(ct){
+							return (
+								<span className="char">{ct}</span>
+							)
+						})
+					}
 				</div>
-			</div>
+				<div className="pointer" style={{display : playerobj.state.quotestatus}}>___</div>
+				</div>
 		);
 	}
 });

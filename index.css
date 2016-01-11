@@ -8,3 +8,34 @@
     border-color: goldenrod;
     margin-top: 6px;
 }
+
+
+body {
+  overflow:hidden
+}
+
+.focused {
+  color: #3498db  
+}
+
+.char {
+  display: inline
+}
+
+.pointer {
+  text-align:center; 
+  color: #3498db;
+  font-size:24px
+}
+
+.content {
+  text-align:center; 
+  font-size:48px; 
+  white-space:nowrap; 
+  overflow:hidden; 
+  font-family: Courier, 'Courier New', monospace
+}
+
+.done {
+  opacity: 0.5
+}
