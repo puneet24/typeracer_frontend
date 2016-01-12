@@ -214,8 +214,7 @@ var PlayerBoard = React.createClass({
 		}).on('error', function(error) {
 		    console.log(error);
 		});
-		var winWidth = $(document).width()-140;
-  		playerobj.setState({ margin : (winWidth/2)});
+  		playerobj.setState({ margin : 580});
 	},
 	componentDidMount : function() {
 		var playerobj = this;
@@ -229,7 +228,8 @@ var PlayerBoard = React.createClass({
 				playerobj.setState({ textstatus : "none" });
 			if(response._source.lstatus == "end"){
 				playerobj.setState({ pid : null });
-				playerobj.setState({ lettercount : 0 })
+				playerobj.setState({ lettercount : 0 });
+				playerobj.setState({ margin : 580});
 
 			}
 			if(response._source.lstatus == "begin" && parseInt(response._source.countdown) == 2){
